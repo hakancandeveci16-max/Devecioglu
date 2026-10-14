@@ -5,7 +5,8 @@ import { PRODUCTS, INITIAL_CATEGORIES } from '../data/products';
 const SUPABASE_URL_KEY = 'devecioglu_supabase_url';
 const SUPABASE_ANON_KEY = 'devecioglu_supabase_anon_key';
 
-// Default publishable key provided by user
+export const DEFAULT_PROJECT_URL = 'https://dxfqelrnextwsryhgihd.supabase.co';
+export const DEFAULT_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4ZnFlbHJuZXh0d3NyeWhnaWhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5NzY1MDAsImV4cCI6MjEwNzU1MjUwMH0.0W2jwY0oPObAJSQUGSuLCWd_inD_kpI8k1_CurNPhF8';
 export const DEFAULT_PUBLISHABLE_KEY = 'sb_publishable_P_2g5155NeVEF9DnD8pFmA_ZOh4ak4Y';
 
 export const getSupabaseConfig = () => {
@@ -15,8 +16,8 @@ export const getSupabaseConfig = () => {
   const storedUrl = typeof window !== 'undefined' ? localStorage.getItem(SUPABASE_URL_KEY) || '' : '';
   const storedKey = typeof window !== 'undefined' ? localStorage.getItem(SUPABASE_ANON_KEY) || '' : '';
 
-  const url = storedUrl || envUrl;
-  const key = storedKey || envKey || DEFAULT_PUBLISHABLE_KEY;
+  const url = storedUrl || envUrl || DEFAULT_PROJECT_URL;
+  const key = storedKey || envKey || DEFAULT_ANON_KEY;
 
   return { url, key, isConfigured: Boolean(url && key) };
 };
@@ -93,7 +94,7 @@ export const mapRowToProduct = (row: any): Product => {
   };
 };
 
-// Map Product object to DB row
+// Map Product object to DB row (matches live Supabase table columns)
 export const mapProductToRow = (p: Product) => {
   return {
     id: p.id,
@@ -102,21 +103,20 @@ export const mapProductToRow = (p: Product) => {
     variety: p.variety,
     grade: p.grade,
     origin: p.origin,
-    indicative_price_range: p.indicativePriceRange,
-    min_price: p.minPrice,
-    max_price: p.maxPrice,
+    indicativePriceRange: p.indicativePriceRange,
+    minPrice: p.minPrice,
+    maxPrice: p.maxPrice,
     unit: p.unit,
-    min_order_kg: p.minOrderKg,
-    min_order_text: p.minOrderText,
-    best_for: p.bestFor,
+    minOrderKg: p.minOrderKg,
+    minOrderText: p.minOrderText,
+    bestFor: p.bestFor,
     packaging: p.packaging,
-    moisture_rate: p.moistureRate || null,
-    color_grade: p.colorGrade,
+    moistureRate: p.moistureRate || null,
+    colorGrade: p.colorGrade,
     description: p.description,
     features: p.features,
     image: p.image,
-    in_stock: p.inStock,
-    updated_at: new Date().toISOString(),
+    inStock: p.inStock,
   };
 };
 
@@ -338,13 +338,17 @@ export const seedSupabaseDatabase = async (): Promise<{ success: boolean; count:
   }
 
   try {
-    // 1. Seed Categories
-    for (const cat of INITIAL_CATEGORIES) {
-      await client.from('categories').upsert({
-        id: cat.id,
-        name: cat.name,
-        description: cat.description || '',
-      }, { onConflict: 'id' });
+    // 1. Seed Categories (if table exists)
+    try {
+      for (const cat of INITIAL_CATEGORIES) {
+        await client.from('categories').upsert({
+          id: cat.id,
+          name: cat.name,
+          description: cat.description || '',
+        }, { onConflict: 'id' });
+      }
+    } catch {
+      // Ignore if table does not exist yet
     }
 
     // 2. Seed Products

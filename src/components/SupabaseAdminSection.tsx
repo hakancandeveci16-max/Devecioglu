@@ -18,6 +18,8 @@ import {
   saveSupabaseConfig,
   testSupabaseConnection,
   seedSupabaseDatabase,
+  DEFAULT_PROJECT_URL,
+  DEFAULT_ANON_KEY,
   DEFAULT_PUBLISHABLE_KEY,
 } from '../lib/supabase';
 
@@ -143,8 +145,8 @@ export const SupabaseAdminSection: React.FC = () => {
 
   useEffect(() => {
     const config = getSupabaseConfig();
-    setUrlInput(config.url || '');
-    setKeyInput(config.key || DEFAULT_PUBLISHABLE_KEY);
+    setUrlInput(config.url || DEFAULT_PROJECT_URL);
+    setKeyInput(config.key || DEFAULT_ANON_KEY);
 
     if (config.isConfigured) {
       testConnectionSilently();
