@@ -173,7 +173,7 @@ export const DeveciogluLogo: React.FC<DeveciogluLogoProps> = ({
               DEVECİOĞLU
             </span>
             <span
-              className={`${dimensions.sub} font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border ${
+              className={`${dimensions.sub} font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border hidden sm:inline-block ${
                 isDark
                   ? 'text-amber-400 bg-amber-950/60 border-amber-700/60'
                   : 'text-emerald-800 bg-emerald-50 border-emerald-200'
@@ -185,7 +185,7 @@ export const DeveciogluLogo: React.FC<DeveciogluLogoProps> = ({
 
           {showSubtitle && (
             <span
-              className={`${dimensions.sub} font-medium mt-1 tracking-tight ${
+              className={`${dimensions.sub} font-medium mt-1 tracking-tight hidden sm:block ${
                 isDark ? 'text-stone-400' : 'text-stone-500'
               }`}
             >
@@ -235,7 +235,7 @@ export const DeveciogluLogo: React.FC<DeveciogluLogoProps> = ({
               DEVECİOĞLU
             </span>
             <span
-              className={`${dimensions.sub} font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border ${
+              className={`${dimensions.sub} font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border hidden sm:inline-block ${
                 isDark
                   ? 'text-emerald-400 bg-emerald-950/60 border-emerald-700/60'
                   : 'text-emerald-800 bg-emerald-50 border-emerald-200'
@@ -247,7 +247,7 @@ export const DeveciogluLogo: React.FC<DeveciogluLogoProps> = ({
 
           {showSubtitle && (
             <span
-              className={`${dimensions.sub} font-medium mt-1 tracking-tight ${
+              className={`${dimensions.sub} font-medium mt-1 tracking-tight hidden sm:block ${
                 isDark ? 'text-stone-400' : 'text-stone-500'
               }`}
             >
