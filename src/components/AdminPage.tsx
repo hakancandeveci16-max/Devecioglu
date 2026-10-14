@@ -38,11 +38,11 @@ import {
 interface AdminPageProps {
   products: Product[];
   categories: CategoryItem[];
-  onUpdateProduct: (product: Product) => void;
-  onAddProduct: (product: Product) => void;
-  onDeleteProduct: (productId: string) => void;
-  onAddCategory: (category: CategoryItem) => void;
-  onDeleteCategory: (categoryId: string) => void;
+  onUpdateProduct: (product: Product) => Promise<boolean> | void;
+  onAddProduct: (product: Product) => Promise<boolean> | void;
+  onDeleteProduct: (productId: string) => Promise<boolean> | void;
+  onAddCategory: (category: CategoryItem) => Promise<boolean> | void;
+  onDeleteCategory: (categoryId: string) => Promise<boolean> | void;
   onResetToDefaults: () => void;
   onBackToHome: () => void;
 }
@@ -162,10 +162,13 @@ export const AdminPage: React.FC<AdminPageProps> = ({
     localStorage.removeItem(ADMIN_AUTH_KEY);
   };
 
-  const handleSaveProductEdit = (e: React.FormEvent) => {
+  const [isSavingProduct, setIsSavingProduct] = useState(false);
+
+  const handleSaveProductEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProduct) return;
 
+    setIsSavingProduct(true);
     const updated: Product = {
       ...editingProduct,
       indicativePriceRange: `${editingProduct.minPrice} - ${editingProduct.maxPrice} ₺ / kg`,
@@ -173,10 +176,16 @@ export const AdminPage: React.FC<AdminPageProps> = ({
       minOrderKg: Number(editingProduct.minOrderKg) || 10,
     };
 
-    onUpdateProduct(updated);
+    const isOk = await onUpdateProduct(updated);
+    setIsSavingProduct(false);
     setEditingProduct(null);
-    setProdSuccess(`"${updated.name}" ürün bilgileri ve yeşil "Min:" sipariş değeri başarıyla güncellendi.`);
-    setTimeout(() => setProdSuccess(''), 3000);
+
+    if (isOk !== false) {
+      setProdSuccess(`✓ "${updated.name}" ürün bilgileri ve fiyatları canlı Supabase veritabanına başarıyla kaydedildi.`);
+    } else {
+      setProdSuccess(`✓ "${updated.name}" güncellendi (Tarayıcı önbelleğine yazıldı).`);
+    }
+    setTimeout(() => setProdSuccess(''), 4500);
   };
 
   const handleCreateCategory = (e: React.FormEvent) => {
@@ -207,10 +216,11 @@ export const AdminPage: React.FC<AdminPageProps> = ({
     setTimeout(() => setCategorySuccess(''), 3000);
   };
 
-  const handleCreateProduct = (e: React.FormEvent) => {
+  const handleCreateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newProdName.trim()) return;
 
+    setIsSavingProduct(true);
     const newProduct: Product = {
       id: `prod-${Date.now()}`,
       name: newProdName.trim(),
@@ -233,15 +243,20 @@ export const AdminPage: React.FC<AdminPageProps> = ({
       inStock: true,
     };
 
-    onAddProduct(newProduct);
-    setProdSuccess(`"${newProduct.name}" kataloğa eklendi.`);
+    const isOk = await onAddProduct(newProduct);
+    setIsSavingProduct(false);
+    if (isOk !== false) {
+      setProdSuccess(`✓ "${newProduct.name}" Supabase veritabanına ve kataloğa başarıyla eklendi.`);
+    } else {
+      setProdSuccess(`✓ "${newProduct.name}" kataloğa eklendi.`);
+    }
     setNewProdName('');
     setNewProdVariety('');
     setNewProdDescription('');
     setNewProdMinOrderText('1 Koli (10 kg)');
     setNewProdMinOrderKg(10);
     setActiveTab('products');
-    setTimeout(() => setProdSuccess(''), 3000);
+    setTimeout(() => setProdSuccess(''), 4500);
   };
 
   const filteredAdminProducts = products.filter((p) => {

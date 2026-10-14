@@ -134,12 +134,8 @@ export default function App() {
   }, [cart]);
 
   // Admin Actions
-  const handleUpdateProduct = (updated: Product) => {
+  const handleUpdateProduct = async (updated: Product): Promise<boolean> => {
     setProducts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
-    // Sync to Supabase
-    saveProductToSupabase(updated);
-
-    // Also update any items in cart referencing this product
     setCart((prev) =>
       prev.map((item) =>
         item.product.id === updated.id ? { ...item, product: updated } : item
@@ -148,35 +144,36 @@ export default function App() {
     if (selectedProduct && selectedProduct.id === updated.id) {
       setSelectedProduct(updated);
     }
+    // Sync to Supabase
+    return await saveProductToSupabase(updated);
   };
 
-  const handleAddProduct = (newProduct: Product) => {
+  const handleAddProduct = async (newProduct: Product): Promise<boolean> => {
     setProducts((prev) => [newProduct, ...prev]);
     // Sync to Supabase
-    saveProductToSupabase(newProduct);
+    return await saveProductToSupabase(newProduct);
   };
 
-  const handleDeleteProduct = (productId: string) => {
+  const handleDeleteProduct = async (productId: string): Promise<boolean> => {
     setProducts((prev) => prev.filter((p) => p.id !== productId));
-    // Sync to Supabase
-    deleteProductFromSupabase(productId);
-
     setCart((prev) => prev.filter((item) => item.product.id !== productId));
     if (selectedProduct && selectedProduct.id === productId) {
       setSelectedProduct(null);
     }
+    // Sync to Supabase
+    return await deleteProductFromSupabase(productId);
   };
 
-  const handleAddCategory = (newCategory: CategoryItem) => {
+  const handleAddCategory = async (newCategory: CategoryItem): Promise<boolean> => {
     setCategories((prev) => [...prev, newCategory]);
     // Sync to Supabase
-    saveCategoryToSupabase(newCategory);
+    return await saveCategoryToSupabase(newCategory);
   };
 
-  const handleDeleteCategory = (categoryId: string) => {
+  const handleDeleteCategory = async (categoryId: string): Promise<boolean> => {
     setCategories((prev) => prev.filter((c) => c.id !== categoryId));
     // Sync to Supabase
-    deleteCategoryFromSupabase(categoryId);
+    return await deleteCategoryFromSupabase(categoryId);
   };
 
   const handleResetToDefaults = () => {
