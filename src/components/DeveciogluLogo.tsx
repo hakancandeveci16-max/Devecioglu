@@ -43,6 +43,8 @@ export const DEFAULT_LOGO_CONFIG: LogoConfig = {
   subText: 'İthal Ceviz İçi & Kuruyemiş Tedariği · Bursa',
 };
 
+import { saveSiteLogoToSupabase } from '../lib/supabase';
+
 const LOGO_STORAGE_KEY = 'devecioglu_site_logo_v3';
 
 export const getSiteLogoConfig = (): LogoConfig => {
@@ -58,6 +60,8 @@ export const saveSiteLogoConfig = (config: LogoConfig) => {
     localStorage.setItem(LOGO_STORAGE_KEY, JSON.stringify(config));
     window.dispatchEvent(new Event('devecioglu_logo_updated'));
   } catch {}
+  // Also save directly to Supabase cloud database
+  saveSiteLogoToSupabase(config);
 };
 
 interface DeveciogluLogoProps {

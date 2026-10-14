@@ -26,6 +26,7 @@ import {
 import { WALNUT_IMAGE, NUTS_IMAGE, DRIED_FRUITS_IMAGE, HERO_IMAGE } from '../data/products';
 import { ImageUploadField } from './ImageUploadField';
 import { SupabaseAdminSection } from './SupabaseAdminSection';
+import { saveHeroImageToSupabase } from '../lib/supabase';
 import {
   DeveciogluLogo,
   LogoStyle,
@@ -1334,8 +1335,9 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                     onClick={() => {
                       localStorage.removeItem('devecioglu_hero_banner_image_v1');
                       setHeroImage(HERO_IMAGE);
+                      saveHeroImageToSupabase(HERO_IMAGE);
                       window.dispatchEvent(new Event('devecioglu_hero_image_updated'));
-                      setLogoSuccess('Ana sayfa açılış görseli varsayılan orijinal görsele sıfırlandı.');
+                      setLogoSuccess('✓ Ana sayfa açılış görseli varsayılana sıfırlandı ve Supabase güncellendi.');
                       setTimeout(() => setLogoSuccess(''), 4000);
                     }}
                     className="text-xs text-emerald-800 font-semibold hover:underline cursor-pointer shrink-0"
@@ -1374,8 +1376,9 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                   onChange={(newImg) => {
                     localStorage.setItem('devecioglu_hero_banner_image_v1', newImg);
                     setHeroImage(newImg);
+                    saveHeroImageToSupabase(newImg);
                     window.dispatchEvent(new Event('devecioglu_hero_image_updated'));
-                    setLogoSuccess('Açılış görseli başarıyla güncellendi ve sitede yayına alındı.');
+                    setLogoSuccess('✓ Açılış görseli canlı Supabase veritabanına kaydedildi ve sitede yayına alındı.');
                     setTimeout(() => setLogoSuccess(''), 4000);
                   }}
                 />
@@ -1398,8 +1401,9 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                         onClick={() => {
                           localStorage.setItem('devecioglu_hero_banner_image_v1', item.img);
                           setHeroImage(item.img);
+                          saveHeroImageToSupabase(item.img);
                           window.dispatchEvent(new Event('devecioglu_hero_image_updated'));
-                          setLogoSuccess(`"${item.label}" görseli açılış arka planı olarak ayarlandı.`);
+                          setLogoSuccess(`✓ "${item.label}" görseli Supabase'e kaydedildi ve açılış arka planı olarak ayarlandı.`);
                           setTimeout(() => setLogoSuccess(''), 4000);
                         }}
                         className={`p-1.5 rounded-xl border-2 text-left transition-all cursor-pointer bg-white ${

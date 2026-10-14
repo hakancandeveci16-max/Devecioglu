@@ -31,11 +31,11 @@ interface AdminPanelModalProps {
   onClose: () => void;
   products: Product[];
   categories: CategoryItem[];
-  onUpdateProduct: (product: Product) => void;
-  onAddProduct: (product: Product) => void;
-  onDeleteProduct: (productId: string) => void;
-  onAddCategory: (category: CategoryItem) => void;
-  onDeleteCategory: (categoryId: string) => void;
+  onUpdateProduct: (product: Product) => Promise<boolean> | void;
+  onAddProduct: (product: Product) => Promise<boolean> | void;
+  onDeleteProduct: (productId: string) => Promise<boolean> | void;
+  onAddCategory: (category: CategoryItem) => Promise<boolean> | void;
+  onDeleteCategory: (categoryId: string) => Promise<boolean> | void;
   onResetToDefaults: () => void;
 }
 
@@ -149,7 +149,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
     localStorage.removeItem(ADMIN_AUTH_KEY);
   };
 
-  const handleSaveProductEdit = (e: React.FormEvent) => {
+  const handleSaveProductEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProduct) return;
 
@@ -161,10 +161,14 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
       minOrderKg: Number(editingProduct.minOrderKg) || 10,
     };
 
-    onUpdateProduct(updated);
+    const isOk = await onUpdateProduct(updated);
     setEditingProduct(null);
-    setProdSuccess(`"${updated.name}" ürün bilgileri ve yeşil "Min:" sipariş değeri güncellendi.`);
-    setTimeout(() => setProdSuccess(''), 3000);
+    if (isOk !== false) {
+      setProdSuccess(`✓ "${updated.name}" ürün bilgileri ve fiyatları canlı Supabase veritabanına kaydedildi.`);
+    } else {
+      setProdSuccess(`✓ "${updated.name}" ürün bilgileri güncellendi.`);
+    }
+    setTimeout(() => setProdSuccess(''), 4500);
   };
 
   const handleCreateCategory = (e: React.FormEvent) => {

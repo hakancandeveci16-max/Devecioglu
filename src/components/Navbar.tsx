@@ -60,9 +60,9 @@ export const Navbar: React.FC<NavbarProps> = ({
       </div>
 
       {/* Main Top Bar Contract: Zone 1 (Wordmark) - Zone 2 (4 Links) - Zone 3 (1 Action) */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between gap-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-18 flex items-center justify-between gap-2 sm:gap-8">
         {/* Zone 1: Unified Primary Brand Co-Logo */}
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0 min-w-0">
           <a href="#" className="flex items-center whitespace-nowrap shrink-0 group">
             <DeveciogluLogo variant="light" size="sm" showSubtitle={true} />
           </a>
@@ -107,20 +107,21 @@ export const Navbar: React.FC<NavbarProps> = ({
         </nav>
 
         {/* Zone 3: 1 primary action */}
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <button
             onClick={onOpenCart}
-            className="relative flex items-center gap-2.5 px-4 py-2.5 bg-stone-900 hover:bg-emerald-800 text-white rounded-lg text-sm font-semibold transition-all shadow-sm hover:shadow active:scale-98 whitespace-nowrap shrink-0 cursor-pointer"
+            className="relative flex items-center gap-1.5 sm:gap-2.5 px-2.5 sm:px-4 py-2 sm:py-2.5 bg-stone-900 hover:bg-emerald-800 text-white rounded-lg text-xs sm:text-sm font-semibold transition-all shadow-sm hover:shadow active:scale-98 whitespace-nowrap shrink-0 cursor-pointer"
             aria-label="Teklif Sepetini Görüntüle"
           >
-            <ShoppingBag className="w-4 h-4 text-emerald-400" />
-            <span>Teklif Sepetim</span>
+            <ShoppingBag className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span className="hidden sm:inline">Teklif Sepetim</span>
+            <span className="sm:hidden font-medium">Sepet</span>
             {itemCount > 0 ? (
-              <span className="bg-emerald-500 text-stone-950 font-bold text-xs px-2 py-0.5 rounded-full tabular-nums">
-                {itemCount} Kalem · {totalKg} kg
+              <span className="bg-emerald-500 text-stone-950 font-bold text-xs px-1.5 sm:px-2 py-0.5 rounded-full tabular-nums">
+                {itemCount} <span className="hidden md:inline">Kalem</span> · {totalKg} kg
               </span>
             ) : (
-              <span className="text-stone-400 text-xs hidden sm:inline">(0)</span>
+              <span className="text-stone-400 text-xs">(0)</span>
             )}
           </button>
         </div>

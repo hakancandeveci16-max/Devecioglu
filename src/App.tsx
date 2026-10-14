@@ -22,6 +22,8 @@ import {
   fetchCategoriesFromSupabase,
   saveCategoryToSupabase,
   deleteCategoryFromSupabase,
+  fetchSiteLogoFromSupabase,
+  fetchHeroImageFromSupabase,
   getSupabaseConfig,
 } from './lib/supabase';
 
@@ -76,9 +78,11 @@ export default function App() {
       if (!config.isConfigured) return;
 
       try {
-        const [sbProducts, sbCategories] = await Promise.all([
+        const [sbProducts, sbCategories, sbLogo, sbHero] = await Promise.all([
           fetchProductsFromSupabase(),
           fetchCategoriesFromSupabase(),
+          fetchSiteLogoFromSupabase(),
+          fetchHeroImageFromSupabase(),
         ]);
         if (isMounted) {
           if (sbProducts && sbProducts.length > 0) {
@@ -86,6 +90,18 @@ export default function App() {
           }
           if (sbCategories && sbCategories.length > 0) {
             setCategories(sbCategories);
+          }
+          if (sbLogo) {
+            try {
+              localStorage.setItem('devecioglu_site_logo_v3', JSON.stringify(sbLogo));
+              window.dispatchEvent(new Event('devecioglu_logo_updated'));
+            } catch {}
+          }
+          if (sbHero) {
+            try {
+              localStorage.setItem('devecioglu_hero_banner_image_v1', sbHero);
+              window.dispatchEvent(new Event('devecioglu_hero_image_updated'));
+            } catch {}
           }
         }
       } catch (err) {
@@ -328,17 +344,17 @@ export default function App() {
       {cart.length > 0 && !isCartOpen && (
         <aside
           aria-label="Teklif Sepeti Özeti"
-          className="fixed bottom-4 right-4 sm:right-6 z-30 max-w-md bg-stone-900 text-white rounded-2xl p-4 shadow-2xl border border-stone-700/80 flex items-center justify-between gap-4 animate-in fade-in slide-in-from-bottom-4 duration-300"
+          className="fixed bottom-3 left-3 right-3 sm:left-auto sm:right-6 sm:bottom-6 z-30 sm:max-w-md bg-stone-900/98 backdrop-blur-md text-white rounded-2xl p-3 sm:p-4 shadow-2xl border border-stone-700/80 flex items-center justify-between gap-3 sm:gap-4 animate-in fade-in slide-in-from-bottom-4 duration-300"
         >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-600 text-stone-950 flex items-center justify-center font-bold">
-              <ShoppingBag className="w-5 h-5 text-white" />
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-600 text-stone-950 flex items-center justify-center font-bold shrink-0">
+              <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
-            <div>
-              <div className="text-xs font-bold text-emerald-400">
-                {cart.length} Kalem Seçildi · {totalKg} kg
+            <div className="min-w-0">
+              <div className="text-xs font-bold text-emerald-400 truncate">
+                {cart.length} Kalem · {totalKg} kg
               </div>
-              <div className="text-[11px] text-stone-300">
+              <div className="text-[10px] sm:text-[11px] text-stone-300 truncate">
                 WhatsApp API teklifini hazırla
               </div>
             </div>
@@ -346,10 +362,10 @@ export default function App() {
 
           <button
             onClick={() => setIsCartOpen(true)}
-            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-stone-950 font-bold rounded-xl text-xs transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+            className="px-3 sm:px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-stone-950 font-bold rounded-xl text-xs transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0"
           >
             <span>Teklifi Gör</span>
-            <ArrowUpRight className="w-4 h-4" />
+            <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
         </aside>
       )}

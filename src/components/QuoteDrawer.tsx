@@ -126,7 +126,7 @@ export const QuoteDrawer: React.FC<QuoteDrawerProps> = ({
         onClick={onClose}
       />
 
-      <div className="fixed inset-y-0 right-0 max-w-full flex pl-6 sm:pl-10">
+      <div className="fixed inset-y-0 right-0 max-w-full flex pl-0 sm:pl-10">
         <div className="w-screen max-w-xl bg-white shadow-2xl flex flex-col justify-between">
           
           {/* Header */}

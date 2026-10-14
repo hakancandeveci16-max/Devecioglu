@@ -372,3 +372,58 @@ export const seedSupabaseDatabase = async (): Promise<{ success: boolean; count:
     };
   }
 };
+
+// ====================================================================
+// SİTE AYARLARI (LOGO VE HERO BANNER) API
+// ====================================================================
+
+export const saveSiteSettingToSupabase = async (key: string, value: any): Promise<boolean> => {
+  const client = getSupabaseClient();
+  if (!client) return false;
+
+  try {
+    const { error } = await client.from('site_settings').upsert({
+      key,
+      value,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'key' });
+    if (error) {
+      console.error(`Supabase site_settings (${key}) upsert error:`, error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error(`Supabase site_settings (${key}) error:`, err);
+    return false;
+  }
+};
+
+export const fetchSiteSettingFromSupabase = async (key: string): Promise<any | null> => {
+  const client = getSupabaseClient();
+  if (!client) return null;
+
+  try {
+    const { data, error } = await client.from('site_settings').select('value').eq('key', key).maybeSingle();
+    if (error || !data) return null;
+    return data.value;
+  } catch {
+    return null;
+  }
+};
+
+export const saveSiteLogoToSupabase = async (config: any): Promise<boolean> => {
+  return await saveSiteSettingToSupabase('site_logo', config);
+};
+
+export const fetchSiteLogoFromSupabase = async (): Promise<any | null> => {
+  return await fetchSiteSettingFromSupabase('site_logo');
+};
+
+export const saveHeroImageToSupabase = async (imageUrl: string): Promise<boolean> => {
+  return await saveSiteSettingToSupabase('hero_banner_image', { url: imageUrl });
+};
+
+export const fetchHeroImageFromSupabase = async (): Promise<string | null> => {
+  const res = await fetchSiteSettingFromSupabase('hero_banner_image');
+  return res?.url || null;
+};
