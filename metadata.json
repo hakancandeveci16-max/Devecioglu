@@ -1,0 +1,6 @@
+{
+  "name": "Devecioğlu Toptan Gıda - B2B İthal Kuruyemiş & Ceviz İçi Kataloğu",
+  "description": "Bursa içi restoran, pastane ve işletmelere yönelik seçme ithal ceviz içi, kuruyemiş ve kuru meyve toptan tedariği, kalite rehberi ve WhatsApp teklif sistemi.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
