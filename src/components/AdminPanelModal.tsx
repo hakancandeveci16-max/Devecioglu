@@ -21,8 +21,10 @@ import {
   DollarSign,
   Tag,
   Package,
+  Database,
 } from 'lucide-react';
 import { WALNUT_IMAGE, NUTS_IMAGE, DRIED_FRUITS_IMAGE } from '../data/products';
+import { SupabaseAdminSection } from './SupabaseAdminSection';
 
 interface AdminPanelModalProps {
   isOpen: boolean;
@@ -67,7 +69,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   const [usernameInput, setUsernameInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [authError, setAuthError] = useState('');
-  const [activeTab, setActiveTab] = useState<'products' | 'categories' | 'add-product' | 'settings'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'categories' | 'add-product' | 'database' | 'settings'>('products');
 
   // Currently editing product state
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -433,6 +435,21 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Yeni Ürün Ekle</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setActiveTab('database');
+                      setEditingProduct(null);
+                    }}
+                    className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 ${
+                      activeTab === 'database'
+                        ? 'bg-emerald-800 text-white shadow-sm'
+                        : 'bg-stone-100 text-stone-600 hover:text-stone-900'
+                    }`}
+                  >
+                    <Database className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Supabase Veritabanı</span>
                   </button>
 
                   <button
@@ -1140,6 +1157,11 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                       </button>
                     </div>
                   </form>
+                )}
+
+                {/* TAB: SUPABASE DATABASE */}
+                {activeTab === 'database' && (
+                  <SupabaseAdminSection />
                 )}
 
                 {/* TAB 4: SETTINGS & PASSWORD CHANGE */}

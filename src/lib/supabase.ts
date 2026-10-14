@@ -1,0 +1,370 @@
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { Product, CategoryItem, SampleRequest } from '../types';
+import { PRODUCTS, INITIAL_CATEGORIES } from '../data/products';
+
+const SUPABASE_URL_KEY = 'devecioglu_supabase_url';
+const SUPABASE_ANON_KEY = 'devecioglu_supabase_anon_key';
+
+// Default publishable key provided by user
+export const DEFAULT_PUBLISHABLE_KEY = 'sb_publishable_P_2g5155NeVEF9DnD8pFmA_ZOh4ak4Y';
+
+export const getSupabaseConfig = () => {
+  const envUrl = (import.meta as any).env?.VITE_SUPABASE_URL || '';
+  const envKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
+
+  const storedUrl = typeof window !== 'undefined' ? localStorage.getItem(SUPABASE_URL_KEY) || '' : '';
+  const storedKey = typeof window !== 'undefined' ? localStorage.getItem(SUPABASE_ANON_KEY) || '' : '';
+
+  const url = storedUrl || envUrl;
+  const key = storedKey || envKey || DEFAULT_PUBLISHABLE_KEY;
+
+  return { url, key, isConfigured: Boolean(url && key) };
+};
+
+export const saveSupabaseConfig = (url: string, key: string) => {
+  if (typeof window !== 'undefined') {
+    if (url) localStorage.setItem(SUPABASE_URL_KEY, url.trim());
+    else localStorage.removeItem(SUPABASE_URL_KEY);
+
+    if (key) localStorage.setItem(SUPABASE_ANON_KEY, key.trim());
+    else localStorage.removeItem(SUPABASE_ANON_KEY);
+
+    // Reset client instance
+    supabaseInstance = null;
+    window.dispatchEvent(new Event('devecioglu_supabase_config_updated'));
+  }
+};
+
+let supabaseInstance: SupabaseClient | null = null;
+
+export const getSupabaseClient = (): SupabaseClient | null => {
+  const { url, key, isConfigured } = getSupabaseConfig();
+  if (!isConfigured) return null;
+
+  if (!supabaseInstance) {
+    try {
+      supabaseInstance = createClient(url, key, {
+        auth: {
+          persistSession: false,
+        },
+      });
+    } catch (err) {
+      console.error('Supabase client initialization error:', err);
+      return null;
+    }
+  }
+
+  return supabaseInstance;
+};
+
+// Map DB row to Product object (supports both snake_case and camelCase)
+export const mapRowToProduct = (row: any): Product => {
+  return {
+    id: row.id,
+    name: row.name || '',
+    category: row.category || 'ceviz',
+    variety: row.variety || '',
+    grade: row.grade || '1. Kalite',
+    origin: row.origin || '',
+    indicativePriceRange: row.indicative_price_range || row.indicativePriceRange || '',
+    minPrice: Number(row.min_price ?? row.minPrice ?? 0),
+    maxPrice: Number(row.max_price ?? row.maxPrice ?? 0),
+    unit: (row.unit === 'koli' ? 'koli' : 'kg'),
+    minOrderKg: Number(row.min_order_kg ?? row.minOrderKg ?? 10),
+    minOrderText: row.min_order_text || row.minOrderText || '1 Koli (10 kg)',
+    bestFor: Array.isArray(row.best_for)
+      ? row.best_for
+      : Array.isArray(row.bestFor)
+      ? row.bestFor
+      : typeof row.best_for === 'string'
+      ? JSON.parse(row.best_for || '[]')
+      : [],
+    packaging: row.packaging || '10 kg Vakumlu Koli',
+    moistureRate: row.moisture_rate || row.moistureRate || undefined,
+    colorGrade: row.color_grade || row.colorGrade || '',
+    description: row.description || '',
+    features: Array.isArray(row.features)
+      ? row.features
+      : typeof row.features === 'string'
+      ? JSON.parse(row.features || '[]')
+      : [],
+    image: row.image || '',
+    inStock: row.in_stock !== undefined ? Boolean(row.in_stock) : row.inStock !== undefined ? Boolean(row.inStock) : true,
+  };
+};
+
+// Map Product object to DB row
+export const mapProductToRow = (p: Product) => {
+  return {
+    id: p.id,
+    name: p.name,
+    category: p.category,
+    variety: p.variety,
+    grade: p.grade,
+    origin: p.origin,
+    indicative_price_range: p.indicativePriceRange,
+    min_price: p.minPrice,
+    max_price: p.maxPrice,
+    unit: p.unit,
+    min_order_kg: p.minOrderKg,
+    min_order_text: p.minOrderText,
+    best_for: p.bestFor,
+    packaging: p.packaging,
+    moisture_rate: p.moistureRate || null,
+    color_grade: p.colorGrade,
+    description: p.description,
+    features: p.features,
+    image: p.image,
+    in_stock: p.inStock,
+    updated_at: new Date().toISOString(),
+  };
+};
+
+// Test Connection
+export const testSupabaseConnection = async (): Promise<{ success: boolean; message: string }> => {
+  const client = getSupabaseClient();
+  const { url } = getSupabaseConfig();
+
+  if (!url) {
+    return {
+      success: false,
+      message: 'Supabase Project URL tanımlı değil. Lütfen URL girin (Örn: https://xxxx.supabase.co).',
+    };
+  }
+
+  if (!client) {
+    return {
+      success: false,
+      message: 'Supabase istemcisi başlatılamadı. URL ve API anahtarınızı kontrol edin.',
+    };
+  }
+
+  try {
+    const { data, error } = await client.from('products').select('id').limit(1);
+    if (error) {
+      if (error.code === '42P01') {
+        return {
+          success: false,
+          message: 'Bağlantı sağlandı ancak "products" tablosu bulunamadı. Lütfen SQL Editor kodunu çalıştırın.',
+        };
+      }
+      return {
+        success: false,
+        message: `Supabase Hatası (${error.code || 'Bilinmiyor'}): ${error.message}`,
+      };
+    }
+    return {
+      success: true,
+      message: `Supabase bağlantısı başarılı! Tablolar erişilebilir durumda (${data?.length || 0} ürün okundu).`,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      message: `Bağlantı hatası: ${err.message || 'Sunucuya ulaşılamadı'}`,
+    };
+  }
+};
+
+// Products API
+export const fetchProductsFromSupabase = async (): Promise<Product[] | null> => {
+  const client = getSupabaseClient();
+  if (!client) return null;
+
+  try {
+    const { data, error } = await client.from('products').select('*').order('created_at', { ascending: true });
+    if (error) {
+      console.warn('Supabase products fetch failed:', error.message);
+      return null;
+    }
+    if (data && data.length > 0) {
+      return data.map(mapRowToProduct);
+    }
+    return [];
+  } catch (err) {
+    console.error('Supabase products error:', err);
+    return null;
+  }
+};
+
+export const saveProductToSupabase = async (product: Product): Promise<boolean> => {
+  const client = getSupabaseClient();
+  if (!client) return false;
+
+  try {
+    const row = mapProductToRow(product);
+    const { error } = await client.from('products').upsert(row, { onConflict: 'id' });
+    if (error) {
+      console.error('Supabase product upsert error:', error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('Supabase product save error:', err);
+    return false;
+  }
+};
+
+export const deleteProductFromSupabase = async (productId: string): Promise<boolean> => {
+  const client = getSupabaseClient();
+  if (!client) return false;
+
+  try {
+    const { error } = await client.from('products').delete().eq('id', productId);
+    if (error) {
+      console.error('Supabase product delete error:', error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('Supabase product delete error:', err);
+    return false;
+  }
+};
+
+// Categories API
+export const fetchCategoriesFromSupabase = async (): Promise<CategoryItem[] | null> => {
+  const client = getSupabaseClient();
+  if (!client) return null;
+
+  try {
+    const { data, error } = await client.from('categories').select('*').order('created_at', { ascending: true });
+    if (error) {
+      console.warn('Supabase categories fetch failed:', error.message);
+      return null;
+    }
+    if (data && data.length > 0) {
+      return data.map((row: any) => ({
+        id: row.id,
+        name: row.name,
+        description: row.description || '',
+      }));
+    }
+    return [];
+  } catch (err) {
+    console.error('Supabase categories error:', err);
+    return null;
+  }
+};
+
+export const saveCategoryToSupabase = async (cat: CategoryItem): Promise<boolean> => {
+  const client = getSupabaseClient();
+  if (!client) return false;
+
+  try {
+    const { error } = await client.from('categories').upsert({
+      id: cat.id,
+      name: cat.name,
+      description: cat.description || '',
+    }, { onConflict: 'id' });
+    if (error) {
+      console.error('Supabase category upsert error:', error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('Supabase category save error:', err);
+    return false;
+  }
+};
+
+export const deleteCategoryFromSupabase = async (categoryId: string): Promise<boolean> => {
+  const client = getSupabaseClient();
+  if (!client) return false;
+
+  try {
+    const { error } = await client.from('categories').delete().eq('id', categoryId);
+    if (error) {
+      console.error('Supabase category delete error:', error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('Supabase category delete error:', err);
+    return false;
+  }
+};
+
+// Sample Requests API (Sipariş & Numune Taleplerini Supabase'e kaydetme)
+export const saveSampleRequestToSupabase = async (request: SampleRequest): Promise<boolean> => {
+  const client = getSupabaseClient();
+  if (!client) return false;
+
+  try {
+    const { error } = await client.from('sample_requests').insert({
+      business_name: request.businessName,
+      contact_name: request.contactName,
+      phone: request.phone,
+      district: request.district,
+      address: request.address,
+      business_type: request.businessType,
+      selected_product_ids: request.selectedProductIds,
+      notes: request.notes || null,
+      status: 'Yeni',
+      created_at: new Date().toISOString(),
+    });
+    if (error) {
+      console.error('Supabase sample request insert error:', error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('Supabase sample request save error:', err);
+    return false;
+  }
+};
+
+export const fetchSampleRequestsFromSupabase = async (): Promise<any[] | null> => {
+  const client = getSupabaseClient();
+  if (!client) return null;
+
+  try {
+    const { data, error } = await client
+      .from('sample_requests')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) return null;
+    return data;
+  } catch (err) {
+    console.error('Supabase sample requests error:', err);
+    return null;
+  }
+};
+
+// Seed default products and categories to Supabase
+export const seedSupabaseDatabase = async (): Promise<{ success: boolean; count: number; message: string }> => {
+  const client = getSupabaseClient();
+  if (!client) {
+    return { success: false, count: 0, message: 'Supabase istemcisi hazır değil. URL ve anahtarınızı girin.' };
+  }
+
+  try {
+    // 1. Seed Categories
+    for (const cat of INITIAL_CATEGORIES) {
+      await client.from('categories').upsert({
+        id: cat.id,
+        name: cat.name,
+        description: cat.description || '',
+      }, { onConflict: 'id' });
+    }
+
+    // 2. Seed Products
+    let count = 0;
+    for (const p of PRODUCTS) {
+      const row = mapProductToRow(p);
+      const { error } = await client.from('products').upsert(row, { onConflict: 'id' });
+      if (!error) count++;
+    }
+
+    return {
+      success: true,
+      count,
+      message: `${count} adet ürün ve ${INITIAL_CATEGORIES.length} kategori Supabase veritabanına başarıyla aktarıldı.`,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      count: 0,
+      message: `Veri aktarım hatası: ${err.message || 'Bilinmeyen hata'}`,
+    };
+  }
+};

@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Product } from '../types';
+import { saveSampleRequestToSupabase } from '../lib/supabase';
 import { DeveciogluLogo } from './DeveciogluLogo';
 import {
   ArrowLeft,
@@ -105,6 +106,16 @@ export const SampleRequestPage: React.FC<SampleRequestPageProps> = ({
 
   const handleSubmitForm = (e: React.FormEvent) => {
     e.preventDefault();
+    saveSampleRequestToSupabase({
+      businessName: businessName.trim() || 'İşletme Belirtilmedi',
+      contactName: businessName.trim() || 'Yetkili',
+      phone: 'WhatsApp / Web',
+      district: district,
+      address: district + ', Bursa',
+      businessType: 'Restoran',
+      selectedProductIds: selectedIds,
+      notes: notes.trim(),
+    });
     setSubmitted(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };

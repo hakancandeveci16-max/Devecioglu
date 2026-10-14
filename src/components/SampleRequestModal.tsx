@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Product } from '../types';
 import { PRODUCTS } from '../data/products';
+import { saveSampleRequestToSupabase } from '../lib/supabase';
 import {
   X,
   Check,
@@ -98,6 +99,16 @@ export const SampleRequestModal: React.FC<SampleRequestModalProps> = ({
 
   const handleSubmitForm = (e: React.FormEvent) => {
     e.preventDefault();
+    saveSampleRequestToSupabase({
+      businessName: businessName.trim() || 'İşletme Belirtilmedi',
+      contactName: businessName.trim() || 'Yetkili',
+      phone: 'WhatsApp / Web',
+      district: district,
+      address: district + ', Bursa',
+      businessType: 'Restoran',
+      selectedProductIds: selectedIds,
+      notes: notes.trim(),
+    });
     setSubmitted(true);
   };
 

@@ -15,12 +15,22 @@ import { AdminPage } from './components/AdminPage';
 import { Footer } from './components/Footer';
 import { ShoppingBag, ArrowUpRight } from 'lucide-react';
 
+import {
+  fetchProductsFromSupabase,
+  saveProductToSupabase,
+  deleteProductFromSupabase,
+  fetchCategoriesFromSupabase,
+  saveCategoryToSupabase,
+  deleteCategoryFromSupabase,
+  getSupabaseConfig,
+} from './lib/supabase';
+
 const CART_STORAGE_KEY = 'devecioglu_wholesale_quote_cart';
 const PRODUCTS_STORAGE_KEY = 'devecioglu_custom_products';
 const CATEGORIES_STORAGE_KEY = 'devecioglu_custom_categories';
 
 export default function App() {
-  // State for products (with localStorage persistence)
+  // State for products (with localStorage persistence fallback)
   const [products, setProducts] = useState<Product[]>(() => {
     try {
       const saved = localStorage.getItem(PRODUCTS_STORAGE_KEY);
@@ -30,7 +40,7 @@ export default function App() {
     }
   });
 
-  // State for categories (with localStorage persistence)
+  // State for categories (with localStorage persistence fallback)
   const [categories, setCategories] = useState<CategoryItem[]>(() => {
     try {
       const saved = localStorage.getItem(CATEGORIES_STORAGE_KEY);
@@ -57,6 +67,44 @@ export default function App() {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [samplePreselectedId, setSamplePreselectedId] = useState<string | undefined>(undefined);
+
+  // Load from Supabase on mount and when config is updated
+  useEffect(() => {
+    let isMounted = true;
+    const loadFromSupabase = async () => {
+      const config = getSupabaseConfig();
+      if (!config.isConfigured) return;
+
+      try {
+        const [sbProducts, sbCategories] = await Promise.all([
+          fetchProductsFromSupabase(),
+          fetchCategoriesFromSupabase(),
+        ]);
+        if (isMounted) {
+          if (sbProducts && sbProducts.length > 0) {
+            setProducts(sbProducts);
+          }
+          if (sbCategories && sbCategories.length > 0) {
+            setCategories(sbCategories);
+          }
+        }
+      } catch (err) {
+        console.warn('Initial Supabase load failed, using local data:', err);
+      }
+    };
+
+    loadFromSupabase();
+
+    const handleConfigUpdate = () => {
+      loadFromSupabase();
+    };
+
+    window.addEventListener('devecioglu_supabase_config_updated', handleConfigUpdate);
+    return () => {
+      isMounted = false;
+      window.removeEventListener('devecioglu_supabase_config_updated', handleConfigUpdate);
+    };
+  }, []);
 
   // Sync products with localStorage
   useEffect(() => {
@@ -88,6 +136,9 @@ export default function App() {
   // Admin Actions
   const handleUpdateProduct = (updated: Product) => {
     setProducts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+    // Sync to Supabase
+    saveProductToSupabase(updated);
+
     // Also update any items in cart referencing this product
     setCart((prev) =>
       prev.map((item) =>
@@ -101,10 +152,15 @@ export default function App() {
 
   const handleAddProduct = (newProduct: Product) => {
     setProducts((prev) => [newProduct, ...prev]);
+    // Sync to Supabase
+    saveProductToSupabase(newProduct);
   };
 
   const handleDeleteProduct = (productId: string) => {
     setProducts((prev) => prev.filter((p) => p.id !== productId));
+    // Sync to Supabase
+    deleteProductFromSupabase(productId);
+
     setCart((prev) => prev.filter((item) => item.product.id !== productId));
     if (selectedProduct && selectedProduct.id === productId) {
       setSelectedProduct(null);
@@ -113,10 +169,14 @@ export default function App() {
 
   const handleAddCategory = (newCategory: CategoryItem) => {
     setCategories((prev) => [...prev, newCategory]);
+    // Sync to Supabase
+    saveCategoryToSupabase(newCategory);
   };
 
   const handleDeleteCategory = (categoryId: string) => {
     setCategories((prev) => prev.filter((c) => c.id !== categoryId));
+    // Sync to Supabase
+    deleteCategoryFromSupabase(categoryId);
   };
 
   const handleResetToDefaults = () => {
