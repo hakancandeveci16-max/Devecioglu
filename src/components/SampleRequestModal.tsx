@@ -20,12 +20,14 @@ import {
 interface SampleRequestModalProps {
   isOpen: boolean;
   onClose: () => void;
+  products?: Product[];
   preSelectedProductId?: string;
 }
 
 export const SampleRequestModal: React.FC<SampleRequestModalProps> = ({
   isOpen,
   onClose,
+  products = [],
   preSelectedProductId,
 }) => {
   const [businessName, setBusinessName] = useState('');
@@ -59,9 +61,9 @@ export const SampleRequestModal: React.FC<SampleRequestModalProps> = ({
     { id: 'Kuru Meyve', label: 'Kuru Meyve' },
   ];
 
-  const filteredProducts = PRODUCTS.filter((p) => getProductCategory(p) === activeCategoryTab);
-
-  const selectedProducts = PRODUCTS.filter((p) => selectedIds.includes(p.id));
+  const availableProducts = products.length > 0 ? products : PRODUCTS;
+  const filteredProducts = availableProducts.filter((p) => getProductCategory(p) === activeCategoryTab);
+  const selectedProducts = availableProducts.filter((p) => selectedIds.includes(p.id));
 
   const toggleProduct = (id: string) => {
     setSelectedIds((prev) =>

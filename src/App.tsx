@@ -71,12 +71,19 @@ export default function App() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [samplePreselectedId, setSamplePreselectedId] = useState<string | undefined>(undefined);
 
+  // Check if this browser already has cached data
+  const hasCachedProducts = typeof window !== 'undefined' && Boolean(localStorage.getItem(PRODUCTS_STORAGE_KEY));
+  const [isLoadingInitialData, setIsLoadingInitialData] = useState(!hasCachedProducts);
+
   // Load from Supabase on mount and when config is updated
   useEffect(() => {
     let isMounted = true;
     const loadFromSupabase = async () => {
       const config = getSupabaseConfig();
-      if (!config.isConfigured) return;
+      if (!config.isConfigured) {
+        if (isMounted) setIsLoadingInitialData(false);
+        return;
+      }
 
       try {
         const [sbProducts, sbCategories, sbLogo, sbHero] = await Promise.all([
@@ -88,9 +95,15 @@ export default function App() {
         if (isMounted) {
           if (sbProducts && sbProducts.length > 0) {
             setProducts(sbProducts);
+            try {
+              localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(sbProducts));
+            } catch {}
           }
           if (sbCategories && sbCategories.length > 0) {
             setCategories(sbCategories);
+            try {
+              localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(sbCategories));
+            } catch {}
           }
           if (sbLogo) {
             try {
@@ -107,8 +120,19 @@ export default function App() {
         }
       } catch (err) {
         console.warn('Initial Supabase load failed, using local data:', err);
+      } finally {
+        if (isMounted) {
+          setIsLoadingInitialData(false);
+        }
       }
     };
+
+    // Safety timeout: never block longer than 1200ms
+    const safetyTimer = setTimeout(() => {
+      if (isMounted) {
+        setIsLoadingInitialData(false);
+      }
+    }, 1200);
 
     loadFromSupabase();
 
@@ -119,6 +143,7 @@ export default function App() {
     window.addEventListener('devecioglu_supabase_config_updated', handleConfigUpdate);
     return () => {
       isMounted = false;
+      clearTimeout(safetyTimer);
       window.removeEventListener('devecioglu_supabase_config_updated', handleConfigUpdate);
     };
   }, []);
@@ -263,6 +288,30 @@ export default function App() {
   };
 
   const totalKg = cart.reduce((acc, item) => acc + item.quantityKg, 0);
+
+  // On first load on a brand new device: show sleek initial loader while Supabase delivers live products
+  if (isLoadingInitialData) {
+    return (
+      <div className="min-h-screen bg-[#0C120C] flex flex-col items-center justify-center p-6 text-white text-center select-none">
+        <div className="relative mb-6">
+          <div className="w-20 h-20 rounded-2xl bg-black border border-stone-800 p-2.5 shadow-2xl flex items-center justify-center">
+            <img src="/favicon.svg" alt="Devecioğlu Toptan Gıda" className="w-15 h-15 object-contain" />
+          </div>
+          <div className="absolute -inset-1.5 rounded-2xl border border-emerald-500/40 animate-pulse pointer-events-none" />
+        </div>
+        <h1 className="text-xl sm:text-2xl font-black font-['Plus_Jakarta_Sans'] tracking-tight text-white mb-1.5">
+          DEVECİOĞLU TOPTAN GIDA
+        </h1>
+        <p className="text-xs sm:text-sm text-stone-400 font-medium max-w-sm mb-5">
+          Bursa İthal Ceviz İçi & Kuruyemiş B2B Tedarik Portalı
+        </p>
+        <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-700/60 text-xs text-emerald-300 font-semibold shadow-xs">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+          <span>Canlı Ürün & Fiyat Kataloğu Yükleniyor...</span>
+        </div>
+      </div>
+    );
+  }
 
   // If Admin Panel / Login is open: Render pristine dedicated full-screen page
   if (isAdminOpen) {

@@ -66,7 +66,7 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
       if (sortBy === 'price-desc') return b.maxPrice - a.maxPrice;
       return 0;
     });
-  }, [selectedCategory, selectedGrade, selectedUsage, searchQuery, sortBy]);
+  }, [products, selectedCategory, selectedGrade, selectedUsage, searchQuery, sortBy]);
 
   const handleQtyChange = (productId: string, delta: number, minKg: number) => {
     setItemQuantities((prev) => {
