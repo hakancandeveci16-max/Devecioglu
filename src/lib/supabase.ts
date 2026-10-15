@@ -177,7 +177,22 @@ export const fetchProductsFromSupabase = async (): Promise<Product[] | null> => 
       return null;
     }
     if (data && data.length > 0) {
-      return data.map(mapRowToProduct);
+      const mapped = data.map(mapRowToProduct);
+      try {
+        const order = await fetchProductOrderFromSupabase();
+        if (order && Array.isArray(order) && order.length > 0) {
+          const orderMap = new Map<string, number>();
+          order.forEach((id, idx) => orderMap.set(id, idx));
+          mapped.sort((a, b) => {
+            const indexA = orderMap.has(a.id) ? orderMap.get(a.id)! : 9999;
+            const indexB = orderMap.has(b.id) ? orderMap.get(b.id)! : 9999;
+            return indexA - indexB;
+          });
+        }
+      } catch (err) {
+        console.warn('Could not sort products by custom order:', err);
+      }
+      return mapped;
     }
     return [];
   } catch (err) {
@@ -426,4 +441,12 @@ export const saveHeroImageToSupabase = async (imageUrl: string): Promise<boolean
 export const fetchHeroImageFromSupabase = async (): Promise<string | null> => {
   const res = await fetchSiteSettingFromSupabase('hero_banner_image');
   return res?.url || null;
+};
+
+export const saveProductOrderToSupabase = async (productIds: string[]): Promise<boolean> => {
+  return await saveSiteSettingToSupabase('product_order', productIds);
+};
+
+export const fetchProductOrderFromSupabase = async (): Promise<string[] | null> => {
+  return await fetchSiteSettingFromSupabase('product_order');
 };

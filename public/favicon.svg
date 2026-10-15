@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="96" fill="#000000" />
+  
+  <!-- Walnut Illustration - Centered for Favicon & Google Search -->
+  <g transform="translate(0, -10)" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Top-right Leaves -->
+    <path d="M 330 145 C 335 110, 365 95, 395 105 C 385 135, 360 155, 330 160 Z" fill="#000000" stroke-width="9" />
+    <path d="M 355 125 L 375 115" stroke-width="7" />
+    <path d="M 310 165 C 315 135, 340 120, 365 130 C 355 155, 335 170, 310 175 Z" fill="#000000" stroke-width="9" />
+    <path d="M 330 148 L 348 140" stroke-width="7" />
+
+    <!-- Whole Walnut (Left & Upper) -->
+    <path d="M 268 90 C 230 85, 140 115, 115 175 C 90 235, 110 285, 150 310 C 160 315, 175 315, 190 310 C 215 300, 260 250, 275 200 C 290 150, 295 100, 268 90 Z" stroke-width="14" />
+    <path d="M 268 90 C 245 140, 230 190, 290 220" stroke-width="11" />
+    <path d="M 160 155 C 145 175, 140 200, 155 220 C 170 240, 150 265, 140 280" stroke-width="9" />
+    <path d="M 185 140 C 170 165, 165 195, 180 215 C 195 235, 180 260, 170 280" stroke-width="9" />
+    <path d="M 220 120 C 205 145, 195 175, 210 200 C 220 220, 210 240, 195 260" stroke-width="9" />
+    <path d="M 260 125 C 248 150, 245 175, 260 190" stroke-width="9" />
+
+    <!-- Foreground Open Walnut Half (Right & Front) -->
+    <path d="M 295 190 C 350 185, 400 230, 400 290 C 400 350, 345 390, 290 385 C 235 380, 190 335, 195 275 C 200 220, 245 195, 295 190 Z" stroke-width="15" fill="#000000" />
+    <path d="M 295 205 C 338 200, 385 238, 385 290 C 385 340, 338 372, 290 368 C 245 365, 208 328, 212 280 C 215 232, 252 208, 295 205 Z" stroke-width="9" />
+
+    <!-- Walnut Kernel Brain (Left Lobe) -->
+    <path d="M 288 238 C 275 230, 260 230, 248 240 C 235 250, 235 265, 248 275 C 232 285, 235 305, 248 315 C 260 325, 275 320, 288 312" stroke-width="10" />
+    <path d="M 252 274 C 265 275, 278 275, 288 275" stroke-width="8" />
+    <path d="M 258 250 C 270 252, 278 260, 288 262" stroke-width="7" />
+    <path d="M 258 300 C 270 298, 278 290, 288 288" stroke-width="7" />
+
+    <!-- Walnut Kernel Brain (Right Lobe) -->
+    <path d="M 302 238 C 315 230, 330 230, 342 240 C 355 250, 355 265, 342 275 C 358 285, 355 305, 342 315 C 330 325, 315 320, 302 312" stroke-width="10" />
+    <path d="M 338 274 C 325 275, 312 275, 302 275" stroke-width="8" />
+    <path d="M 332 250 C 320 252, 312 260, 302 262" stroke-width="7" />
+    <path d="M 332 300 C 320 298, 312 290, 302 288" stroke-width="7" />
+    
+    <!-- Center Dividing Stem -->
+    <line x1="295" y1="230" x2="295" y2="325" stroke-width="10" />
+  </g>
+</svg>

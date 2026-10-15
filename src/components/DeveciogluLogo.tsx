@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import aydinLogo from '../assets/images/aydin-kuruyemis-logo.png';
+import { saveSiteLogoToSupabase } from '../lib/supabase';
 
-export type LogoStyle = 'aydin-partner' | 'modern-walnut' | 'gold-crest' | 'corporate-green' | 'custom';
+export type LogoStyle = 'official-walnut' | 'aydin-partner' | 'modern-walnut' | 'gold-crest' | 'corporate-green' | 'custom';
 
 export interface LogoConfig {
   style: LogoStyle;
@@ -11,6 +12,12 @@ export interface LogoConfig {
 }
 
 export const LOGO_PRESETS: { id: LogoStyle; name: string; description: string; badge: string }[] = [
+  {
+    id: 'official-walnut',
+    name: 'Devecioğlu Resmi Çifte Ceviz Logosu (Siyah-Beyaz İllüstrasyon)',
+    description: 'Resmi çifte ceviz illüstrasyonu ve Devecioğlu Toptan Gıda Ticareti tipografisi',
+    badge: 'Resmi Firma Logosu',
+  },
   {
     id: 'aydin-partner',
     name: 'Aydın Kuruyemiş & Devecioğlu (Resmi Dağıtıcı Ko-Logosu)',
@@ -38,12 +45,10 @@ export const LOGO_PRESETS: { id: LogoStyle; name: string; description: string; b
 ];
 
 export const DEFAULT_LOGO_CONFIG: LogoConfig = {
-  style: 'aydin-partner',
+  style: 'official-walnut',
   brandText: 'DEVECİOĞLU',
   subText: 'İthal Ceviz İçi & Kuruyemiş Tedariği · Bursa',
 };
-
-import { saveSiteLogoToSupabase } from '../lib/supabase';
 
 const LOGO_STORAGE_KEY = 'devecioglu_site_logo_v3';
 
@@ -103,6 +108,57 @@ export const DeveciogluLogo: React.FC<DeveciogluLogoProps> = ({
     lg: { emblem: 56, imgH: 52, text: 'text-2xl', sub: 'text-xs', gap: 'gap-3.5' },
     xl: { emblem: 72, imgH: 64, text: 'text-3xl', sub: 'text-sm', gap: 'gap-4' },
   }[size];
+
+  // 0. OFFICIAL WALNUT LOGO (Official illustration logo uploaded by user)
+  if (activeStyle === 'official-walnut') {
+    return (
+      <div className={`inline-flex items-center ${dimensions.gap} ${className} group`}>
+        <div
+          className={`flex items-center justify-center shrink-0 rounded-xl overflow-hidden transition-all duration-300 group-hover:scale-103 bg-black p-1 border ${
+            isDark ? 'border-stone-800' : 'border-stone-300 shadow-2xs'
+          }`}
+          style={{ width: dimensions.imgH + 4, height: dimensions.imgH + 4 }}
+        >
+          <img
+            src="/favicon.svg"
+            alt="Devecioğlu Toptan Gıda"
+            className="w-full h-full object-contain"
+          />
+        </div>
+
+        <div className="flex flex-col justify-center leading-none">
+          <div className="flex items-center gap-1.5">
+            <span
+              className={`${dimensions.text} font-black tracking-tight font-['Plus_Jakarta_Sans'] transition-colors ${
+                isDark ? 'text-white group-hover:text-amber-400' : 'text-stone-900 group-hover:text-emerald-800'
+              }`}
+            >
+              DEVECİOĞLU
+            </span>
+            <span
+              className={`${dimensions.sub} font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border hidden sm:inline-block ${
+                isDark
+                  ? 'text-amber-400 bg-amber-950/60 border-amber-700/60'
+                  : 'text-emerald-800 bg-emerald-50 border-emerald-200'
+              }`}
+            >
+              Toptan Gıda Ticareti
+            </span>
+          </div>
+
+          {showSubtitle && (
+            <span
+              className={`${dimensions.sub} font-medium mt-1 tracking-tight hidden sm:block ${
+                isDark ? 'text-stone-400' : 'text-stone-500'
+              }`}
+            >
+              İthal Ceviz İçi & Kuruyemiş Tedariği · Bursa
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   // 1. CUSTOM UPLOADED LOGO
   if (activeStyle === 'custom' && activeCustomUrl) {

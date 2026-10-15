@@ -22,6 +22,8 @@ import {
   Tag,
   Package,
   Database,
+  ChevronUp,
+  ChevronDown,
 } from 'lucide-react';
 import { WALNUT_IMAGE, NUTS_IMAGE, DRIED_FRUITS_IMAGE } from '../data/products';
 import { SupabaseAdminSection } from './SupabaseAdminSection';
@@ -34,6 +36,7 @@ interface AdminPanelModalProps {
   onUpdateProduct: (product: Product) => Promise<boolean> | void;
   onAddProduct: (product: Product) => Promise<boolean> | void;
   onDeleteProduct: (productId: string) => Promise<boolean> | void;
+  onReorderProducts?: (products: Product[]) => Promise<boolean> | void;
   onAddCategory: (category: CategoryItem) => Promise<boolean> | void;
   onDeleteCategory: (categoryId: string) => Promise<boolean> | void;
   onResetToDefaults: () => void;
@@ -59,6 +62,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   onUpdateProduct,
   onAddProduct,
   onDeleteProduct,
+  onReorderProducts,
   onAddCategory,
   onDeleteCategory,
   onResetToDefaults,
@@ -169,6 +173,24 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
       setProdSuccess(`✓ "${updated.name}" ürün bilgileri güncellendi.`);
     }
     setTimeout(() => setProdSuccess(''), 4500);
+  };
+
+  const handleMoveProduct = async (productId: string, direction: 'up' | 'down') => {
+    const currentIndex = products.findIndex((p) => p.id === productId);
+    if (currentIndex === -1) return;
+
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (targetIndex < 0 || targetIndex >= products.length) return;
+
+    const newProducts = [...products];
+    const [moved] = newProducts.splice(currentIndex, 1);
+    newProducts.splice(targetIndex, 0, moved);
+
+    if (onReorderProducts) {
+      await onReorderProducts(newProducts);
+    }
+    setProdSuccess(`✓ "${moved.name}" sırası ${direction === 'up' ? 'yukarı' : 'aşağı'} alındı ve kaydedildi.`);
+    setTimeout(() => setProdSuccess(''), 3000);
   };
 
   const handleCreateCategory = (e: React.FormEvent) => {
@@ -776,6 +798,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                             <table className="w-full text-left text-xs">
                               <thead className="bg-stone-100 text-stone-700 font-semibold border-b border-stone-200">
                                 <tr>
+                                  <th className="py-2.5 px-3 text-center w-20">Sıra & Konum</th>
                                   <th className="py-2.5 px-3">Görsel</th>
                                   <th className="py-2.5 px-3">Ürün & Çeşit</th>
                                   <th className="py-2.5 px-3">Kategori</th>
@@ -786,15 +809,52 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-stone-200 text-stone-600">
-                                {filteredAdminProducts.map((p) => (
-                                  <tr key={p.id} className="hover:bg-stone-50/80 transition-colors">
-                                    <td className="py-2 px-3">
-                                      <img
-                                        src={p.image}
-                                        alt={p.name}
-                                        className="w-10 h-10 object-cover rounded-lg border border-stone-200"
-                                      />
-                                    </td>
+                                {filteredAdminProducts.map((p) => {
+                                  const globalIndex = products.findIndex((prod) => prod.id === p.id);
+                                  const isFirst = globalIndex <= 0;
+                                  const isLast = globalIndex >= products.length - 1;
+                                  return (
+                                    <tr key={p.id} className="hover:bg-stone-50/80 transition-colors">
+                                      <td className="py-2 px-3 text-center whitespace-nowrap">
+                                        <div className="inline-flex items-center gap-1 bg-stone-100 rounded-lg p-1 border border-stone-200 shadow-2xs">
+                                          <button
+                                            type="button"
+                                            onClick={() => handleMoveProduct(p.id, 'up')}
+                                            disabled={isFirst}
+                                            title={isFirst ? 'Zaten en başta' : 'Bir üste taşı'}
+                                            className={`p-0.5 rounded cursor-pointer transition-colors ${
+                                              isFirst
+                                                ? 'text-stone-300 cursor-not-allowed'
+                                                : 'text-stone-700 hover:text-emerald-700 hover:bg-white'
+                                            }`}
+                                          >
+                                            <ChevronUp className="w-3.5 h-3.5" />
+                                          </button>
+                                          <span className="text-[11px] font-mono font-bold text-stone-800 px-1 min-w-[20px]">
+                                            #{globalIndex + 1}
+                                          </span>
+                                          <button
+                                            type="button"
+                                            onClick={() => handleMoveProduct(p.id, 'down')}
+                                            disabled={isLast}
+                                            title={isLast ? 'Zaten en sonda' : 'Bir alta taşı'}
+                                            className={`p-0.5 rounded cursor-pointer transition-colors ${
+                                              isLast
+                                                ? 'text-stone-300 cursor-not-allowed'
+                                                : 'text-stone-700 hover:text-emerald-700 hover:bg-white'
+                                            }`}
+                                          >
+                                            <ChevronDown className="w-3.5 h-3.5" />
+                                          </button>
+                                        </div>
+                                      </td>
+                                      <td className="py-2 px-3">
+                                        <img
+                                          src={p.image}
+                                          alt={p.name}
+                                          className="w-10 h-10 object-cover rounded-lg border border-stone-200"
+                                        />
+                                      </td>
                                     <td className="py-2 px-3">
                                       <div className="font-bold text-stone-900">{p.name}</div>
                                       <div className="text-[11px] text-stone-500">{p.variety} · {p.origin}</div>
@@ -834,8 +894,9 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                                       </div>
                                     </td>
                                   </tr>
-                                ))}
-                              </tbody>
+                                );
+                              })}
+                            </tbody>
                             </table>
                           </div>
                         </div>

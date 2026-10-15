@@ -24,6 +24,7 @@ import {
   deleteCategoryFromSupabase,
   fetchSiteLogoFromSupabase,
   fetchHeroImageFromSupabase,
+  saveProductOrderToSupabase,
   getSupabaseConfig,
 } from './lib/supabase';
 
@@ -192,6 +193,15 @@ export default function App() {
     return await deleteCategoryFromSupabase(categoryId);
   };
 
+  const handleReorderProducts = async (newProducts: Product[]): Promise<boolean> => {
+    setProducts(newProducts);
+    try {
+      localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(newProducts));
+    } catch {}
+    const ids = newProducts.map((p) => p.id);
+    return await saveProductOrderToSupabase(ids);
+  };
+
   const handleResetToDefaults = () => {
     setProducts(PRODUCTS);
     setCategories(INITIAL_CATEGORIES);
@@ -264,6 +274,7 @@ export default function App() {
           onUpdateProduct={handleUpdateProduct}
           onAddProduct={handleAddProduct}
           onDeleteProduct={handleDeleteProduct}
+          onReorderProducts={handleReorderProducts}
           onAddCategory={handleAddCategory}
           onDeleteCategory={handleDeleteCategory}
           onResetToDefaults={handleResetToDefaults}
@@ -344,7 +355,7 @@ export default function App() {
       {cart.length > 0 && !isCartOpen && (
         <aside
           aria-label="Teklif Sepeti Özeti"
-          className="fixed bottom-3 left-3 right-3 sm:left-auto sm:right-6 sm:bottom-6 z-30 sm:max-w-md bg-stone-900/98 backdrop-blur-md text-white rounded-2xl p-3 sm:p-4 shadow-2xl border border-stone-700/80 flex items-center justify-between gap-3 sm:gap-4 animate-in fade-in slide-in-from-bottom-4 duration-300"
+          className="fixed bottom-3 left-3 right-3 sm:left-auto sm:right-6 sm:bottom-6 z-30 w-auto max-w-[calc(100vw-24px)] sm:max-w-md bg-stone-900/98 backdrop-blur-md text-white rounded-2xl p-3 sm:p-4 shadow-2xl border border-stone-700/80 flex items-center justify-between gap-2.5 sm:gap-4 animate-in fade-in slide-in-from-bottom-4 duration-300 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
         >
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-600 text-stone-950 flex items-center justify-center font-bold shrink-0">

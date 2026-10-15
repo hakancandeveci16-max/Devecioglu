@@ -22,6 +22,8 @@ import {
   Package,
   Database,
   Image as ImageIcon,
+  ChevronUp,
+  ChevronDown,
 } from 'lucide-react';
 import { WALNUT_IMAGE, NUTS_IMAGE, DRIED_FRUITS_IMAGE, HERO_IMAGE } from '../data/products';
 import { ImageUploadField } from './ImageUploadField';
@@ -42,6 +44,7 @@ interface AdminPageProps {
   onUpdateProduct: (product: Product) => Promise<boolean> | void;
   onAddProduct: (product: Product) => Promise<boolean> | void;
   onDeleteProduct: (productId: string) => Promise<boolean> | void;
+  onReorderProducts?: (products: Product[]) => Promise<boolean> | void;
   onAddCategory: (category: CategoryItem) => Promise<boolean> | void;
   onDeleteCategory: (categoryId: string) => Promise<boolean> | void;
   onResetToDefaults: () => void;
@@ -66,6 +69,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
   onUpdateProduct,
   onAddProduct,
   onDeleteProduct,
+  onReorderProducts,
   onAddCategory,
   onDeleteCategory,
   onResetToDefaults,
@@ -187,6 +191,24 @@ export const AdminPage: React.FC<AdminPageProps> = ({
       setProdSuccess(`✓ "${updated.name}" güncellendi (Tarayıcı önbelleğine yazıldı).`);
     }
     setTimeout(() => setProdSuccess(''), 4500);
+  };
+
+  const handleMoveProduct = async (productId: string, direction: 'up' | 'down') => {
+    const currentIndex = products.findIndex((p) => p.id === productId);
+    if (currentIndex === -1) return;
+
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (targetIndex < 0 || targetIndex >= products.length) return;
+
+    const newProducts = [...products];
+    const [moved] = newProducts.splice(currentIndex, 1);
+    newProducts.splice(targetIndex, 0, moved);
+
+    if (onReorderProducts) {
+      await onReorderProducts(newProducts);
+    }
+    setProdSuccess(`✓ "${moved.name}" sırası ${direction === 'up' ? 'yukarı' : 'aşağı'} alındı ve kaydedildi.`);
+    setTimeout(() => setProdSuccess(''), 3000);
   };
 
   const handleCreateCategory = (e: React.FormEvent) => {
@@ -776,6 +798,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                       <table className="w-full text-left text-xs">
                         <thead className="bg-stone-100 text-stone-700 font-bold border-b border-stone-200">
                           <tr>
+                            <th className="py-3 px-3.5 text-center w-24">Sıra & Konum</th>
                             <th className="py-3 px-3.5">Görsel</th>
                             <th className="py-3 px-3.5">Ürün & Çeşit</th>
                             <th className="py-3 px-3.5">Kategori</th>
@@ -786,15 +809,52 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-stone-200 text-stone-600">
-                          {filteredAdminProducts.map((p) => (
-                            <tr key={p.id} className="hover:bg-stone-50 transition-colors">
-                              <td className="py-2.5 px-3.5">
-                                <img
-                                  src={p.image}
-                                  alt={p.name}
-                                  className="w-11 h-11 object-cover rounded-lg border border-stone-200"
-                                />
-                              </td>
+                          {filteredAdminProducts.map((p) => {
+                            const globalIndex = products.findIndex((prod) => prod.id === p.id);
+                            const isFirst = globalIndex <= 0;
+                            const isLast = globalIndex >= products.length - 1;
+                            return (
+                              <tr key={p.id} className="hover:bg-stone-50 transition-colors">
+                                <td className="py-2.5 px-3.5 text-center whitespace-nowrap">
+                                  <div className="inline-flex items-center gap-1 bg-stone-100 rounded-lg p-1 border border-stone-200 shadow-2xs">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleMoveProduct(p.id, 'up')}
+                                      disabled={isFirst}
+                                      title={isFirst ? 'Zaten en başta' : 'Bir üste taşı'}
+                                      className={`p-1 rounded cursor-pointer transition-colors ${
+                                        isFirst
+                                          ? 'text-stone-300 cursor-not-allowed'
+                                          : 'text-stone-700 hover:text-emerald-700 hover:bg-white'
+                                      }`}
+                                    >
+                                      <ChevronUp className="w-3.5 h-3.5" />
+                                    </button>
+                                    <span className="text-[11px] font-mono font-bold text-stone-800 px-1 min-w-[24px]">
+                                      #{globalIndex + 1}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleMoveProduct(p.id, 'down')}
+                                      disabled={isLast}
+                                      title={isLast ? 'Zaten en sonda' : 'Bir alta taşı'}
+                                      className={`p-1 rounded cursor-pointer transition-colors ${
+                                        isLast
+                                          ? 'text-stone-300 cursor-not-allowed'
+                                          : 'text-stone-700 hover:text-emerald-700 hover:bg-white'
+                                      }`}
+                                    >
+                                      <ChevronDown className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                </td>
+                                <td className="py-2.5 px-3.5">
+                                  <img
+                                    src={p.image}
+                                    alt={p.name}
+                                    className="w-11 h-11 object-cover rounded-lg border border-stone-200"
+                                  />
+                                </td>
                               <td className="py-2.5 px-3.5">
                                 <div className="font-bold text-stone-900">{p.name}</div>
                                 <div className="text-[11px] text-stone-500">{p.variety} · {p.origin}</div>
@@ -834,8 +894,9 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                                 </div>
                               </td>
                             </tr>
-                          ))}
-                        </tbody>
+                          );
+                        })}
+                      </tbody>
                       </table>
                     </div>
                   </div>
